@@ -1,11 +1,50 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import type { NextPage } from 'next';
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import type { NextPage } from "next";
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import { useEffect, useState } from "react";
+import { AndamanToken__factory } from "../typechain-types";
+import { useSigner } from "wagmi";
+import { ethers } from "ethers";
 
 const Home: NextPage = () => {
+  const [totalSupply, setTotalSupply] = useState("0");
+  const [mintInput, setMintInput] = useState("0");
+  const { data: signer, isError, isLoading } = useSigner();
+
+  const fetchTotalSupply = async () => {
+    if (signer) {
+      const andamanTokenContract = AndamanToken__factory.connect(
+        "0x6e7A2dB6Ee481aBcabF6aD610A1b941e9B8CF7b5",
+        signer
+      );
+      const totalSupply = await andamanTokenContract.totalSupply();
+      setTotalSupply(ethers.utils.formatEther(totalSupply));
+    }
+  };
+
+  const mint = async () => {
+    if (signer) {
+      const andamanTokenContract = AndamanToken__factory.connect(
+        "0x6e7A2dB6Ee481aBcabF6aD610A1b941e9B8CF7b5",
+        signer
+      );
+      const tx = await andamanTokenContract.mint(
+        "0x92FA30D0A002863Bd6D9Bc968Aab853e5FA0d285",
+        ethers.utils.parseEther(mintInput)
+      );
+      await tx.wait();
+    }
+
+  useEffect(() => {
+    fetchTotalSupply();
+  }, [signer]);
+
   return (
     <div className={styles.container}>
+      <p>
+        currentTotalSupply: {totalSupply} {isLoading && "loading..."}
+      </p>
       <Head>
         <title>RainbowKit App</title>
         <meta
@@ -18,7 +57,7 @@ const Home: NextPage = () => {
       <main className={styles.main}>
         <ConnectButton />
 
-        <h1 className={styles.title}>
+        {/* <h1 className={styles.title}>
           Welcome to <a href="">RainbowKit</a> + <a href="">wagmi</a> +{' '}
           <a href="https://nextjs.org">Next.js!</a>
         </h1>
@@ -69,7 +108,7 @@ const Home: NextPage = () => {
               Instantly deploy your Next.js site to a public URL with Vercel.
             </p>
           </a>
-        </div>
+        </div> */}
       </main>
 
       <footer className={styles.footer}>
